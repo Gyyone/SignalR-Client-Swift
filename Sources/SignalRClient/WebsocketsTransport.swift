@@ -131,7 +131,17 @@ public class WebsocketsTransport: NSObject, Transport, URLSessionWebSocketDelega
             delegate?.transportDidClose(WebSocketsTransportError.webSocketClosed(statusCode: closeCode.rawValue, reason: reasonString))
         }
     }
-
+    public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        if challenge.protectionSpace.serverTrust == nil {
+            completionHandler(.useCredential, nil)
+        } else {
+            let trust: SecTrust = challenge.protectionSpace.serverTrust!
+            //("is self-signed: %@", trust.isSelfSigned.flatMap { "\($0)" } ?? "unknown" )
+            let credential = URLCredential(trust: trust)
+            completionHandler(.useCredential, credential)
+        }
+       
+    }
     private func markTransportClosed() -> Bool {
         logger.log(logLevel: .debug, message: "Marking transport as closed.")
         var previousCloseStatus = false
